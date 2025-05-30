@@ -30,6 +30,7 @@ pip install -r requirements.txt
 ```
 
 Where:
+```text
 PROVIDER - name of target llm (ollama / deepseek / openai / yandex / gigachat)
 DEEPSEEK_API_KEY - Deepseek API KEY
 GIGA_CHAT_AUTH_KEY - GigaChat Auth Key
@@ -38,6 +39,7 @@ OLLAMA_MODEL - model of using ollama
 YANDEX_GPT_FOLDER_ID - Yandex GPT Folder ID
 YANDEX_GPT_API_KEY - Yandex GPT API KEY
 OPENAI_API_KEY - OpenAI API Key
+```
 
 ## Contributing
 
