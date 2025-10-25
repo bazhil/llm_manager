@@ -27,7 +27,8 @@ class LLMFactory:
         Returns:
             LLMManager: An instance of the appropriate LLM manager.
         """
-        provider = os.getenv("PROVIDER", "ollama")  # Default to "ollama"
+        provider = os.getenv("PROVIDER", "gigachat")  # Default to "gigachat"
+        print(f"LLM_MANAGER - Creating manager for provider: {provider}")
 
         if provider == "ollama":
             llm_manager = OllamaManager
@@ -43,6 +44,7 @@ class LLMFactory:
         else:
             raise ValueError(f"Unsupported provider: {provider}")
 
+        print(f"LLM_MANAGER - Selected manager class: {llm_manager.__name__}")
         return llm_manager
 
 
@@ -51,3 +53,12 @@ class LLMFactory:
         """Get response from the LLM"""
 
         return await cls().llm_manager.get_response(system_prompt, prompt)
+
+
+def get_llm_manager():
+    """
+    Factory function to get LLM manager instance.
+    Returns the appropriate manager class based on the PROVIDER environment variable.
+    """
+    factory = LLMFactory()
+    return factory.llm_manager

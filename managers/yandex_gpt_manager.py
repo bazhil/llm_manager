@@ -10,16 +10,25 @@ load_dotenv()
 class YandexGPTManager:
     """Manage the YandexGPT API"""
 
-    sdk = YCloudML(
-        folder_id=os.getenv("YANDEX_GPT_FOLDER_ID"),
-        auth=os.getenv("YANDEX_GPT_API_KEY"),
-    )
+    _sdk = None
+
+    @classmethod
+    def _get_sdk(cls):
+        """Lazy initialization of YandexGPT SDK"""
+        if cls._sdk is None:
+            folder_id = os.getenv("YANDEX_GPT_FOLDER_ID")
+            api_key = os.getenv("YANDEX_GPT_API_KEY")
+            if not folder_id or not api_key:
+                raise ValueError("YANDEX_GPT_FOLDER_ID и YANDEX_GPT_API_KEY должны быть установлены")
+            cls._sdk = YCloudML(folder_id=folder_id, auth=api_key)
+        return cls._sdk
 
     @classmethod
     async def get_response(cls, system_prompt: str, prompt: str):
         """Get response from the YandexGPT"""
 
-        response = cls.sdk.models.completions("yandexgpt").configure(temperature=0.5).run(
+        sdk = cls._get_sdk()
+        response = sdk.models.completions("yandexgpt").configure(temperature=0.5).run(
             messages=[
                 {"role": "system", "text": system_prompt},
                 {"role": "user", "text": prompt}
