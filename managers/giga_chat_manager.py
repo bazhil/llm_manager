@@ -1,5 +1,6 @@
 import asyncio
 import os
+import logging
 from gigachat import GigaChat
 from gigachat.models import Chat, Messages, MessagesRole
 from gigachat.exceptions import ResponseError
@@ -7,6 +8,7 @@ from dotenv import load_dotenv
 
 
 load_dotenv()
+logger = logging.getLogger(__name__)
 
 
 class GigaChatManager:
@@ -19,16 +21,21 @@ class GigaChatManager:
     def _get_client(cls):
         """Lazy initialization of GigaChat client with error handling"""
         if cls._client is not None:
+            logger.debug("Using existing client instance")
             return cls._client
         
         if cls._client_error is not None:
+            logger.error("Previous initialization failed")
             raise cls._client_error
         
         try:
             auth_key = os.getenv('GIGA_CHAT_AUTH_KEY')
-            model = os.getenv('GIGA_CHAT_MODEL')
+            model = os.getenv('GIGA_CHAT_MODEL', 'GigaChat-2')
+            
+            logger.info("Initializing GigaChat client...")
+            logger.info(f"  Model: {model}")
+            logger.info(f"  Auth Key: {'SET' if auth_key else 'NOT SET'}")
            
-            # Проверка наличия ключа
             if not auth_key or auth_key == 'your-gigachat-auth-key':
                 error_msg = (
                     "GIGA_CHAT_AUTH_KEY не установлен или использует placeholder значение!\n"
@@ -38,16 +45,16 @@ class GigaChatManager:
                     "3. Установите в .env: GIGA_CHAT_AUTH_KEY=ваш-ключ\n"
                     "4. Перезапустите: docker compose restart app"
                 )
+                logger.error(error_msg)
                 cls._client_error = ValueError(error_msg)
                 raise cls._client_error
             
-            print(f"GIGACHAT - Initializing client with model: {model}")
             cls._client = GigaChat(
                 credentials=auth_key,
                 verify_ssl_certs=False,
                 model=model,
             )
-            print("GIGACHAT - Client initialized successfully")
+            logger.info("GigaChat client initialized successfully")
             return cls._client
             
         except ValueError:
@@ -72,9 +79,16 @@ class GigaChatManager:
     @classmethod
     async def get_response(cls, system_prompt: str, prompt: str) -> str:
         """Get response from GigaChat"""
+        logger.info("="*60)
+        logger.info("GENERATING RESPONSE - GigaChat")
+        logger.info(f"Model: {os.getenv('GIGA_CHAT_MODEL', 'GigaChat')}")
+        logger.info(f"Prompt length: {len(prompt)} chars")
+        logger.info(f"System prompt length: {len(system_prompt)} chars")
+        
         try:
             client = cls._get_client()
-                        
+            
+            logger.info("Sending request to GigaChat API...")
             response = client.chat(
                 Chat(
                     messages=[
@@ -93,6 +107,8 @@ class GigaChatManager:
             )
             
             answer = response.choices[0].message.content
+            logger.info(f"Response received: {len(answer)} chars")
+            logger.info("="*60)
 
             return answer
             

@@ -1,4 +1,5 @@
 import os
+import logging
 from dotenv import load_dotenv
 
 from managers.deepseek_manager import DeepSeekManager
@@ -9,6 +10,7 @@ from managers.yandex_gpt_manager import YandexGPTManager
 
 
 load_dotenv()
+logger = logging.getLogger(__name__)
 
 
 class LLMFactory:
@@ -27,24 +29,40 @@ class LLMFactory:
         Returns:
             LLMManager: An instance of the appropriate LLM manager.
         """
-        provider = os.getenv("PROVIDER", "gigachat")  # Default to "gigachat"
-        print(f"LLM_MANAGER - Creating manager for provider: {provider}")
+        provider = os.getenv("PROVIDER", "ollama")
+        logger.info("="*60)
+        logger.info("INITIALIZING LLM")
+        logger.info(f"Provider from env: {provider}")
 
         if provider == "ollama":
             llm_manager = OllamaManager
+            logger.info("Selected: Ollama")
+            logger.info(f"  Host: {os.getenv('OLLAMA_HOST', 'NOT SET')}")
+            logger.info(f"  Model: {os.getenv('OLLAMA_MODEL', 'NOT SET')}")
         elif provider == "deepseek":
             llm_manager = DeepSeekManager
+            logger.info("Selected: DeepSeek")
+            logger.info(f"  API Key: {'SET' if os.getenv('DEEPSEEK_API_KEY') else 'NOT SET'}")
         elif provider == "openai":
             llm_manager = OpenAIManager
+            logger.info("Selected: OpenAI")
+            logger.info(f"  API Key: {'SET' if os.getenv('OPENAI_API_KEY') else 'NOT SET'}")
+            logger.info(f"  Model: {os.getenv('OPENAI_MODEL', 'gpt-4o-mini')}")
         elif provider == "yandex":
             llm_manager = YandexGPTManager
+            logger.info("Selected: Yandex GPT")
+            logger.info(f"  API Key: {'SET' if os.getenv('YANDEX_GPT_API_KEY') else 'NOT SET'}")
         elif provider == "gigachat":
             llm_manager = GigaChatManager
-
+            logger.info("Selected: GigaChat")
+            logger.info(f"  Auth Key: {'SET' if os.getenv('GIGA_CHAT_AUTH_KEY') else 'NOT SET'}")
+            logger.info(f"  Model: {os.getenv('GIGA_CHAT_MODEL', 'GigaChat')}")
         else:
+            logger.error(f"Unsupported provider: {provider}")
             raise ValueError(f"Unsupported provider: {provider}")
 
-        print(f"LLM_MANAGER - Selected manager class: {llm_manager.__name__}")
+        logger.info(f"Manager class ready: {llm_manager.__name__}")
+        logger.info("="*60)
         return llm_manager
 
 
